@@ -1,0 +1,7 @@
+github.com/heucuva/go-win32 v1.0.0 h1:CXJEwYkGaW2ZubKt8GZO/g0z7xsKam97mMZjkzgE1IA=
+github.com/heucuva/go-win32 v1.0.0/go.mod h1:vIRx8BmGjRCCwvCFn7rwlOGgRC+MjqS6ttY7e2vbyQ4=
+github.com/heucuva/go-winmm v1.0.0 h1:ePsM4MEaKJBcnMvJKoe/bzCrQCnjaLicw/F/VtGOoyY=
+github.com/heucuva/go-winmm v1.0.0/go.mod h1:MF2kyWivfQIAxPCVgRKYoxALaH6pCRo1GMaQ2znLeWA=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+golang.org/x/sys v0.0.0-20210220050731-9a76102bfb43 h1:SgQ6LNaYJU0JIuEHv9+s6EbhSCwYeAf5Yvj6lpYlqAE=
+golang.org/x/sys v0.0.0-20210220050731-9a76102bfb43/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
