@@ -1,19 +1,19 @@
+//go:build windows && directsound
 // +build windows,directsound
 
 package directsound
 
 import (
+	"fmt"
 	"reflect"
 	"syscall"
 	"unsafe"
-
-	"github.com/pkg/errors"
 
 	winmm "github.com/heucuva/go-winmm"
 )
 
 var (
-	errDirectSoundBuffer = errors.Wrap(ErrDirectSound, "DirectSoundBuffer")
+	errDirectSoundBuffer = fmt.Errorf("%w: DirectSoundBuffer", ErrDirectSound)
 )
 
 type directSoundBufferVtbl struct {
@@ -49,7 +49,7 @@ type Buffer struct {
 func (b *Buffer) AddRef() error {
 	retVal, _, _ := syscall.Syscall(b.vtbl.AddRef, 1, uintptr(unsafe.Pointer(b)), 0, 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundBuffer, "AddRef returned %0.8x", retVal)
+		return fmt.Errorf("%w: AddRef returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	return nil
 }
@@ -58,7 +58,7 @@ func (b *Buffer) AddRef() error {
 func (b *Buffer) Release() error {
 	retVal, _, _ := syscall.Syscall(b.vtbl.Release, 1, uintptr(unsafe.Pointer(b)), 0, 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundBuffer, "Release returned %0.8x", retVal)
+		return fmt.Errorf("%w: Release returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	return nil
 }
@@ -69,7 +69,7 @@ func (b *Buffer) GetNotify() (*Notify, error) {
 	var notify *Notify
 	retVal, _, _ := syscall.Syscall(b.vtbl.QueryInterface, 3, uintptr(unsafe.Pointer(b)), uintptr(unsafe.Pointer(&guidIDirectSoundNotify)), uintptr(unsafe.Pointer(&notify)))
 	if retVal != 0 {
-		return nil, errors.Wrapf(errDirectSoundBuffer, "QueryInterface returned %0.8x", retVal)
+		return nil, fmt.Errorf("%w: QueryInterface returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 
 	return notify, nil
@@ -78,7 +78,7 @@ func (b *Buffer) GetNotify() (*Notify, error) {
 func (b *Buffer) setFormat(wfx winmm.WAVEFORMATEX) error {
 	retVal, _, _ := syscall.Syscall(b.vtbl.SetFormat, 2, uintptr(unsafe.Pointer(b)), uintptr(unsafe.Pointer(&wfx)), 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundBuffer, "SetFormat returned %0.8x", retVal)
+		return fmt.Errorf("%w: SetFormat returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	return nil
 }
@@ -91,7 +91,7 @@ func (b *Buffer) Play(looping bool) error {
 	}
 	retVal, _, _ := syscall.Syscall6(b.vtbl.Play, 4, uintptr(unsafe.Pointer(b)), 0, 0, uintptr(flags), 0, 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundBuffer, "Play returned %0.8x", retVal)
+		return fmt.Errorf("%w: Play returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	return nil
 }
@@ -102,7 +102,7 @@ func (b *Buffer) GetCurrentPosition() (uint32, uint32, error) {
 	var currentWriteCursor uint32
 	retVal, _, _ := syscall.Syscall(b.vtbl.GetCurrentPosition, 3, uintptr(unsafe.Pointer(b)), uintptr(unsafe.Pointer(&currentPlayCursor)), uintptr(unsafe.Pointer(&currentWriteCursor)))
 	if retVal != 0 {
-		return 0, 0, errors.Wrapf(errDirectSoundBuffer, "GetCurrentPosition returned %0.8x", retVal)
+		return 0, 0, fmt.Errorf("%w: GetCurrentPosition returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	return currentPlayCursor, currentWriteCursor, nil
 }
@@ -112,7 +112,7 @@ func (b *Buffer) GetStatus() (DSBSTATUS, error) {
 	var status DSBSTATUS
 	retVal, _, _ := syscall.Syscall(b.vtbl.GetStatus, 2, uintptr(unsafe.Pointer(b)), uintptr(unsafe.Pointer(&status)), 0)
 	if retVal != 0 {
-		return 0, errors.Wrapf(errDirectSoundBuffer, "GetStatus returned %0.8x", retVal)
+		return 0, fmt.Errorf("%w: GetStatus returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	return status, nil
 }
@@ -130,7 +130,7 @@ func (b *Buffer) Lock(offset int, numBytes int) ([][]byte, error) {
 		uintptr(unsafe.Pointer(&segs[1].Data)), uintptr(unsafe.Pointer(&segs[1].Len)),
 		uintptr(flags), 0)
 	if retVal != 0 {
-		return nil, errors.Wrapf(errDirectSoundBuffer, "Lock returned %0.8x", retVal)
+		return nil, fmt.Errorf("%w: Lock returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	for i, _ := range segs {
 		segs[i].Cap = segs[i].Len
@@ -148,7 +148,7 @@ func (b *Buffer) Unlock(segments [][]byte) error {
 		segs[1].Data, uintptr(segs[1].Len),
 		0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundBuffer, "Unlock returned %0.8x", retVal)
+		return fmt.Errorf("%w: Unlock returned %0.8x", errDirectSoundBuffer, retVal)
 	}
 	return nil
 }

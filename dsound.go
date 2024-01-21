@@ -1,22 +1,24 @@
+//go:build windows && directsound
 // +build windows,directsound
 
 package directsound
 
 import (
+	"errors"
+	"fmt"
 	"syscall"
 	"unsafe"
 
 	win32 "github.com/heucuva/go-win32"
 	winmm "github.com/heucuva/go-winmm"
-	"github.com/pkg/errors"
 	"golang.org/x/sys/windows"
 )
 
 var (
 	// ErrDirectSound is an error returned by the directsound system
-	ErrDirectSound = errors.New("error")
+	ErrDirectSound = errors.New("directsound error")
 
-	errDirectSound = errors.Wrap(ErrDirectSound, "DirectSound")
+	errDirectSound = fmt.Errorf("%w: in DirectSound", ErrDirectSound)
 
 	dsoundDll              = windows.NewLazySystemDLL("dsound.dll")
 	directSoundCreate8Proc = dsoundDll.NewProc("DirectSoundCreate8")
@@ -47,7 +49,7 @@ func createDevice(deviceID *syscall.GUID) (*DirectSound, error) {
 	objPtr := uintptr(unsafe.Pointer(&obj))
 	retVal, _, _ := directSoundCreate8Proc.Call(deviceIDPtr, objPtr, 0)
 	if retVal != 0 {
-		return nil, errors.Wrapf(errDirectSound, "DirectSoundCreate8 returned %0.8x", retVal)
+		return nil, fmt.Errorf("%w: DirectSoundCreate8 returned %0.8x", errDirectSound, retVal)
 	}
 
 	hwnd := win32.GetDesktopWindow()
@@ -72,7 +74,7 @@ func NewDSound(preferredDeviceName string) (*DirectSound, error) {
 func (ds *DirectSound) addRef() error {
 	retVal, _, _ := syscall.Syscall(ds.vtbl.AddRef, 1, uintptr(unsafe.Pointer(ds)), 0, 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSound, "AddRef returned %0.8x", retVal)
+		return fmt.Errorf("%w: AddRef returned %0.8x", errDirectSound, retVal)
 	}
 	return nil
 }
@@ -80,7 +82,7 @@ func (ds *DirectSound) addRef() error {
 func (ds *DirectSound) release() error {
 	retVal, _, _ := syscall.Syscall(ds.vtbl.Release, 1, uintptr(unsafe.Pointer(ds)), 0, 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSound, "Release returned %0.8x", retVal)
+		return fmt.Errorf("%w: Release returned %0.8x", errDirectSound, retVal)
 	}
 	return nil
 }
@@ -88,7 +90,7 @@ func (ds *DirectSound) release() error {
 func (ds *DirectSound) setCooperativeLevel(hwnd windows.HWND, level uint32) error {
 	retVal, _, _ := syscall.Syscall(ds.vtbl.SetCooperativeLevel, 3, uintptr(unsafe.Pointer(ds)), uintptr(hwnd), uintptr(level))
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSound, "SetCooperativeLevel returned %0.8x", retVal)
+		return fmt.Errorf("%w: SetCooperativeLevel returned %0.8x", errDirectSound, retVal)
 	}
 	return nil
 }
@@ -111,7 +113,7 @@ func (ds *DirectSound) CreateSoundBufferPrimary(channels int, samplesPerSec int,
 	var buffer *Buffer
 	retVal, _, _ := syscall.Syscall6(ds.vtbl.CreateSoundBuffer, 4, uintptr(unsafe.Pointer(ds)), uintptr(unsafe.Pointer(&bd)), uintptr(unsafe.Pointer(&buffer)), 0, 0, 0)
 	if retVal != 0 {
-		return nil, nil, errors.Wrapf(errDirectSound, "CreateSoundBuffer(primary) returned %0.8x", retVal)
+		return nil, nil, fmt.Errorf("%w: CreateSoundBuffer(primary) returned %0.8x", errDirectSound, retVal)
 	}
 
 	wfx := winmm.WAVEFORMATEX{
@@ -144,7 +146,7 @@ func (ds *DirectSound) CreateSoundBufferSecondary(wfx *winmm.WAVEFORMATEX, buffe
 	var buffer *Buffer
 	retVal, _, _ := syscall.Syscall6(ds.vtbl.CreateSoundBuffer, 4, uintptr(unsafe.Pointer(ds)), uintptr(unsafe.Pointer(&bd)), uintptr(unsafe.Pointer(&buffer)), 0, 0, 0)
 	if retVal != 0 {
-		return nil, errors.Wrapf(errDirectSound, "CreateSoundBuffer(secondary) returned %0.8x", retVal)
+		return nil, fmt.Errorf("%w: CreateSoundBuffer(secondary) returned %0.8x", errDirectSound, retVal)
 	}
 
 	return buffer, nil

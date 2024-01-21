@@ -1,17 +1,18 @@
+//go:build windows && directsound
 // +build windows,directsound
 
 package directsound
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
 
-	"github.com/pkg/errors"
 	"golang.org/x/sys/windows"
 )
 
 var (
-	errDirectSoundNotify = errors.Wrap(ErrDirectSound, "DirectSoundNotify")
+	errDirectSoundNotify = fmt.Errorf("%w: in DirectSoundNotify", ErrDirectSound)
 )
 
 type notifyVtbl struct {
@@ -35,7 +36,7 @@ type PositionNotify struct {
 func (n *Notify) AddRef() error {
 	retVal, _, _ := syscall.Syscall(n.vtbl.AddRef, 1, uintptr(unsafe.Pointer(n)), 0, 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundNotify, "AddRef returned %0.8x", retVal)
+		return fmt.Errorf("%w: AddRef returned %0.8x", errDirectSoundNotify, retVal)
 	}
 	return nil
 }
@@ -44,7 +45,7 @@ func (n *Notify) AddRef() error {
 func (n *Notify) Release() error {
 	retVal, _, _ := syscall.Syscall(n.vtbl.Release, 1, uintptr(unsafe.Pointer(n)), 0, 0)
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundNotify, "Release returned %0.8x", retVal)
+		return fmt.Errorf("%w: Release returned %0.8x", errDirectSoundNotify, retVal)
 	}
 	return nil
 }
@@ -53,7 +54,7 @@ func (n *Notify) Release() error {
 func (n *Notify) SetNotificationPositions(events []PositionNotify) error {
 	retVal, _, _ := syscall.Syscall(n.vtbl.SetNotificationPositions, 3, uintptr(unsafe.Pointer(n)), uintptr(len(events)), uintptr(unsafe.Pointer(&events[0])))
 	if retVal != 0 {
-		return errors.Wrapf(errDirectSoundNotify, "SetNotificationPositions returned %0.8x", retVal)
+		return fmt.Errorf("%w: SetNotificationPositions returned %0.8x", errDirectSoundNotify, retVal)
 	}
 
 	return nil
